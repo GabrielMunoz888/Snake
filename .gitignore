@@ -1,0 +1,36 @@
+# Carpetas generadas por Unity, no se suben nunca
+/[Ll]ibrary/
+/[Tt]emp/
+/[Oo]bj/
+/[Bb]uild/
+/[Bb]uilds/
+/[Ll]ogs/
+/[Mm]emoryCaptures/
+/[Uu]serSettings/
+
+# Archivos de Visual Studio / Rider
+.vs/
+.idea/
+*.csproj
+*.sln
+*.suo
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+
+# Archivos de macOS
+.DS_Store
+
+# Archivos de compilación
+*.apk
+*.unitypackage
+*.app
+
+# Crashlytics
+crashlytics-build.properties
