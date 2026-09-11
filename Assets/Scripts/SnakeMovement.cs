@@ -1,0 +1,164 @@
+using UnityEngine;
+using System.Collections.Generic;
+using UnityEngine.InputSystem;
+using TMPro;
+using UnityEngine.UIElements;
+using UnityEngine.SceneManagement;
+public class SnakeMovement : MonoBehaviour
+{
+    public int boardWidth = 40;
+    public int boardHeight = 20;
+
+    public TextMeshProUGUI scoreText;
+
+    public GameObject gameOverPanel;
+
+    public TextMeshProUGUI finalScoreText;
+
+    public List<Vector2Int> body = new List<Vector2Int>();
+
+    public Vector2Int direccion = Vector2Int.right;
+    private Vector2Int nextDirection = Vector2Int.right;
+    public float moveInterval = 0.2f;
+    private float timer = 0f;
+
+    public GameObject segmentPrefab;
+    private List<GameObject> segmentObjects = new List<GameObject>();
+
+    public GameObject foodPrefab;
+    private Vector2Int foodPosition;
+    private GameObject foodObject;
+
+    private bool isGameOver;
+
+    private int score = 0;
+
+
+    void Start()
+    {
+        body.Add(new Vector2Int(5, 5));
+        body.Add(new Vector2Int(4, 5));
+        body.Add(new Vector2Int(3, 5));
+        PlaceFood();
+    }
+
+    void Update()
+    {
+        if (isGameOver)
+        {
+            return;
+        }
+        HandleInput();
+        timer += Time.deltaTime;
+
+        if (timer >= moveInterval)
+        {
+            timer = 0f;
+            Move();
+        }
+    }
+    public void RestartGame()
+    {
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+    }
+    public void ExtiGame()
+    {
+        Application.Quit();
+    }
+
+
+    void Move()
+    {
+        direccion = nextDirection;
+
+        Vector2Int newHeadPosition = body[0] + direccion;
+
+        if (newHeadPosition.x <0 || newHeadPosition.x > boardWidth || newHeadPosition.y <0 || newHeadPosition.y > boardHeight)
+        {
+            GameOver();
+            return;
+        }
+
+        if (body.Contains(newHeadPosition))
+        {
+            GameOver();
+            return;
+        }
+
+        bool hasEaten = newHeadPosition == foodPosition;
+        body.Insert(0, newHeadPosition);
+        if (!hasEaten)
+        {
+            body.RemoveAt(body.Count -1);
+        }
+        else
+        {
+            PlaceFood();
+            score++;
+            scoreText.text = "Score: " + score;
+        }
+
+        transform.position = new Vector3(body[0].x, body[0].y, 0);
+
+        UpdateVisuals();
+    }
+
+    void GameOver()
+    {
+        isGameOver = true;
+        Debug.Log("Game Over");
+        gameOverPanel.SetActive(true);
+        finalScoreText.text = "Your score: " + score;
+    }
+
+    void HandleInput()
+    {
+        Vector2Int newDirection = nextDirection;
+
+        if (Keyboard.current.upArrowKey.wasPressedThisFrame) newDirection = Vector2Int.up;
+        if (Keyboard.current.leftArrowKey.wasPressedThisFrame) newDirection = Vector2Int.left;
+        if (Keyboard.current.rightArrowKey.wasPressedThisFrame) newDirection = Vector2Int.right;
+        if (Keyboard.current.downArrowKey.wasPressedThisFrame) newDirection = Vector2Int.down;
+
+        if (newDirection + direccion != Vector2Int.zero)
+        {
+            nextDirection = newDirection;
+        }
+    }
+
+    void UpdateVisuals()
+    {
+        while (segmentObjects.Count < body.Count)
+        {
+            GameObject newSegment = Instantiate(segmentPrefab);
+            segmentObjects.Add(newSegment);
+        }
+
+        for (int i = 0; i < body.Count; i++)
+        {
+            segmentObjects[i].transform.position = new Vector3(body[i].x, body[i].y, 0);
+        }
+    }
+
+    void PlaceFood()
+    {
+        Vector2Int newFoodPosition;
+
+        do
+        {
+            int randomX = Random.Range(0, boardWidth + 1);
+            int randomy = Random.Range(0, boardHeight + 1);
+            newFoodPosition = new Vector2Int(randomX, randomy);
+        }
+        while (body.Contains(newFoodPosition));
+
+        foodPosition = newFoodPosition;
+
+        if (foodObject == null)
+        {
+            foodObject = Instantiate(foodPrefab);
+        }
+
+        foodObject.transform.position = new Vector3(foodPosition.x, foodPosition.y, 0);
+    }
+}
