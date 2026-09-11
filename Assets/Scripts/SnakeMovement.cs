@@ -1,9 +1,11 @@
-using UnityEngine;
 using System.Collections.Generic;
-using UnityEngine.InputSystem;
+using System.Linq;
 using TMPro;
-using UnityEngine.UIElements;
+using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
+using UnityEngine.UIElements;
+
 public class SnakeMovement : MonoBehaviour
 {
     public int boardWidth = 40;
@@ -18,8 +20,8 @@ public class SnakeMovement : MonoBehaviour
     public List<Vector2Int> body = new List<Vector2Int>();
 
     public Vector2Int direccion = Vector2Int.right;
-    private Vector2Int nextDirection = Vector2Int.right;
-    public float moveInterval = 0.2f;
+    private Queue<Vector2Int> directionQueue = new Queue<Vector2Int>();
+    public float moveInterval = 0.15f;
     private float timer = 0f;
 
     public GameObject segmentPrefab;
@@ -69,7 +71,10 @@ public class SnakeMovement : MonoBehaviour
 
     void Move()
     {
-        direccion = nextDirection;
+        if (directionQueue.Count > 0)
+        {
+            direccion = directionQueue.Dequeue();
+        }
 
         Vector2Int newHeadPosition = body[0] + direccion;
 
@@ -113,16 +118,19 @@ public class SnakeMovement : MonoBehaviour
 
     void HandleInput()
     {
-        Vector2Int newDirection = nextDirection;
+        if (directionQueue.Count >= 2) return;
+
+        Vector2Int lastDirection = directionQueue.Count > 0 ? directionQueue.Last() : direccion;
+        Vector2Int newDirection = lastDirection;
 
         if (Keyboard.current.upArrowKey.wasPressedThisFrame) newDirection = Vector2Int.up;
         if (Keyboard.current.leftArrowKey.wasPressedThisFrame) newDirection = Vector2Int.left;
         if (Keyboard.current.rightArrowKey.wasPressedThisFrame) newDirection = Vector2Int.right;
         if (Keyboard.current.downArrowKey.wasPressedThisFrame) newDirection = Vector2Int.down;
 
-        if (newDirection + direccion != Vector2Int.zero)
+        if (newDirection != lastDirection && newDirection + lastDirection != Vector2Int.zero)
         {
-            nextDirection = newDirection;
+            directionQueue.Enqueue(newDirection);
         }
     }
 
