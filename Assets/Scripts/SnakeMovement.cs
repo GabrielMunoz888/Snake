@@ -43,7 +43,18 @@ public class SnakeMovement : MonoBehaviour
         body.Add(new Vector2Int(3, 5));
         PlaceFood();
     }
+    void UpdateRotation()
+    {
+        float angle = 0f;
 
+        if (direccion == Vector2Int.right) angle = 0f;
+        else if (direccion == Vector2Int.up) angle = 90f;
+        else if (direccion == Vector2Int.left) angle = 180f;
+        else if (direccion == Vector2Int.down) angle = 270f;
+        else if (direccion == Vector2Int.down) angle = 270f;
+
+        transform.rotation = Quaternion.Euler(0, 0, angle);
+    }
     void Update()
     {
         if (isGameOver)
@@ -74,6 +85,7 @@ public class SnakeMovement : MonoBehaviour
         if (directionQueue.Count > 0)
         {
             direccion = directionQueue.Dequeue();
+            UpdateRotation();
         }
 
         Vector2Int newHeadPosition = body[0] + direccion;
