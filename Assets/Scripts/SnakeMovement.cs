@@ -55,6 +55,23 @@ public class SnakeMovement : MonoBehaviour
 
         transform.rotation = Quaternion.Euler(0, 0, angle);
     }
+    void RotateSegment(GameObject segment, Vector2Int current, Vector2Int previous)
+    {
+        Vector2Int diff = previous - current;
+
+        float angle = 0f;
+
+        if (diff.x != 0)
+        {
+            angle = 0f;
+        }
+        else if (diff.y != 0)
+        {
+            angle = 90f;
+        }
+
+        segment.transform.rotation = Quaternion.Euler(0, 0, angle);
+    }
     void Update()
     {
         if (isGameOver)
@@ -148,15 +165,16 @@ public class SnakeMovement : MonoBehaviour
 
     void UpdateVisuals()
     {
-        while (segmentObjects.Count < body.Count)
+        while (segmentObjects.Count < body.Count - 1)
         {
             GameObject newSegment = Instantiate(segmentPrefab);
             segmentObjects.Add(newSegment);
         }
 
-        for (int i = 0; i < body.Count; i++)
+        for (int i = 1; i < body.Count; i++)
         {
-            segmentObjects[i].transform.position = new Vector3(body[i].x, body[i].y, 0);
+            segmentObjects[i - 1].transform.position = new Vector3(body[i].x, body[i].y, 0);
+            RotateSegment(segmentObjects[i - 1], body[i], body[i - 1]);
         }
     }
 
