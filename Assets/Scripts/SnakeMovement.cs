@@ -13,11 +13,18 @@ public class SnakeMovement : MonoBehaviour
 
     public TextMeshProUGUI scoreText;
 
-    public GameObject gameOverPanel;
+    public GameObject tailPrefab;
 
+    public GameObject gameOverPanel;
+    public GameObject curvePrefab;
+    public GameObject backingPrefab;
     public TextMeshProUGUI finalScoreText;
 
+    public AudioSource biteSound;
+
     public List<Vector2Int> body = new List<Vector2Int>();
+
+    private List<GameObject> backingObjects = new List<GameObject>();
 
     public Vector2Int direccion = Vector2Int.right;
     private Queue<Vector2Int> directionQueue = new Queue<Vector2Int>();
@@ -54,6 +61,14 @@ public class SnakeMovement : MonoBehaviour
         else if (direccion == Vector2Int.down) angle = 270f;
 
         transform.rotation = Quaternion.Euler(0, 0, angle);
+    }
+    float DirectionToAngle(Vector2Int dir)
+    {
+        if (dir == Vector2Int.right) return 0f;
+        if (dir == Vector2Int.up) return 90f;
+        if (dir == Vector2Int.left) return 180f;
+        if (dir == Vector2Int.down) return 270f;
+        return 0f;
     }
     void RotateSegment(GameObject segment, Vector2Int current, Vector2Int previous)
     {
@@ -130,6 +145,7 @@ public class SnakeMovement : MonoBehaviour
             PlaceFood();
             score++;
             scoreText.text = "Score: " + score;
+            biteSound.Play();
         }
 
         transform.position = new Vector3(body[0].x, body[0].y, 0);
@@ -171,13 +187,78 @@ public class SnakeMovement : MonoBehaviour
             segmentObjects.Add(newSegment);
         }
 
+        while (backingObjects.Count < body.Count - 1)
+        {
+            GameObject newBacking = Instantiate(backingPrefab);
+            backingObjects.Add(newBacking);
+        }
+
+        for (int i = 0; i < body.Count - 1; i++)
+        {
+            Vector3 posA = new Vector3(body[i].x, body[i].y, 0);
+            Vector3 posB = new Vector3(body[i + 1].x, body[i + 1].y, 0);
+            Vector3 midPoint = (posA + posB) / 2f;
+
+            backingObjects[i].transform.position = midPoint;
+            backingObjects[i].transform.localScale = new Vector3(0.7f, 0.7f, 1f);
+        }
+
+        int lastBackingIndex = body.Count - 2;
+        if (lastBackingIndex >= 0)
+        {
+            backingObjects[lastBackingIndex].transform.localScale = new Vector3(0.6f, 0.6f, 1f);
+        }
+
         for (int i = 1; i < body.Count; i++)
         {
-            segmentObjects[i - 1].transform.position = new Vector3(body[i].x, body[i].y, 0);
-            RotateSegment(segmentObjects[i - 1], body[i], body[i - 1]);
+            GameObject seg = segmentObjects[i - 1];
+            seg.transform.position = new Vector3(body[i].x, body[i].y, 0);
+
+            SpriteRenderer sr = seg.GetComponent<SpriteRenderer>();
+
+            bool isLast = (i == body.Count - 1);
+
+            if (isLast)
+            {
+                sr.sprite = tailPrefab.GetComponent<SpriteRenderer>().sprite;
+                Vector2Int tailDir = body[i - 1] - body[i];
+                seg.transform.rotation = Quaternion.Euler(0, 0, DirectionToAngle(tailDir));
+            }
+            else
+            {
+                Vector2Int cameFrom = body[i] - body[i + 1];
+                Vector2Int goingTo = body[i - 1] - body[i];
+
+                if (cameFrom == goingTo)
+                {
+                    sr.sprite = segmentPrefab.GetComponent<SpriteRenderer>().sprite;
+                    RotateSegment(seg, body[i], body[i - 1]);
+                }
+                else
+                {
+                    sr.sprite = curvePrefab.GetComponent<SpriteRenderer>().sprite;
+                    float angle = GetCurveAngle(cameFrom, goingTo);
+                    seg.transform.rotation = Quaternion.Euler(0, 0, angle);
+                }
+            }
         }
     }
+    float GetCurveAngle(Vector2Int cameFrom, Vector2Int goingTo)
+    {
+        if (cameFrom == Vector2Int.right && goingTo == Vector2Int.up) return 0f;
+        if (cameFrom == Vector2Int.down && goingTo == Vector2Int.left) return 0f;
 
+        if (cameFrom == Vector2Int.up && goingTo == Vector2Int.left) return 90f;
+        if (cameFrom == Vector2Int.right && goingTo == Vector2Int.down) return 90f;
+
+        if (cameFrom == Vector2Int.left && goingTo == Vector2Int.down) return 180f;
+        if (cameFrom == Vector2Int.up && goingTo == Vector2Int.right) return 180f;
+
+        if (cameFrom == Vector2Int.down && goingTo == Vector2Int.right) return 270f;
+        if (cameFrom == Vector2Int.left && goingTo == Vector2Int.up) return 270f;
+
+        return 0f;
+    }
     void PlaceFood()
     {
         Vector2Int newFoodPosition;
