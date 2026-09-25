@@ -28,7 +28,7 @@ public class SnakeMovement : MonoBehaviour
 
     public Vector2Int direccion = Vector2Int.right;
     private Queue<Vector2Int> directionQueue = new Queue<Vector2Int>();
-    public float moveInterval = 0.15f;
+    public float moveInterval = 0.9f;
     private float timer = 0f;
 
     public GameObject segmentPrefab;
@@ -142,15 +142,30 @@ public class SnakeMovement : MonoBehaviour
         }
         else
         {
-            PlaceFood();
             score++;
             scoreText.text = "Score: " + score;
-            biteSound.Play();
+
+            int totalCells = (boardWidth + 1) * (boardHeight + 1);
+            if (body.Count >= totalCells)
+            {
+                Win();
+            }
+            else
+            {
+                PlaceFood();
+            }
         }
 
         transform.position = new Vector3(body[0].x, body[0].y, 0);
 
         UpdateVisuals();
+    }
+    void Win()
+    {
+        isGameOver = true;
+        Debug.Log("You Win!");
+        gameOverPanel.SetActive(true);
+        finalScoreText.text = "You win! Score: " + score;
     }
 
     void GameOver()
