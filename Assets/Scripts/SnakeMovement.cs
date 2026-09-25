@@ -106,10 +106,7 @@ public class SnakeMovement : MonoBehaviour
     {
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
-    public void ExtiGame()
-    {
-        Application.Quit();
-    }
+    
 
 
     void Move()
